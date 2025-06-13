@@ -79,15 +79,15 @@ container_reader = ContainerReader("/path/to/image_store")
 # List all image IDs (container-sorted)
 image_ids = container_reader.get_image_ids()
 
+# Access region using the ContainerRegion interface. The ContainerRegion is a wrapper for a memory-mapped array of the image region within the container.
+region = container_reader.open_image(image_id)
+partial = region[:, :32, :, :64]  # Read a sub-volume
+
 # Load a full patch from an image by bounding box (C, D, H, W)
 image_id = "img_1"
 bbox = ((0, 1), (0, 64), (0, 128), (0, 128))
 patch = container_reader.load_patch(image_id, bbox)
 print("Patch shape:", patch.shape)
-
-# Access region using the ContainerRegion interface
-region = container_reader.open_image(image_id)
-partial = region[:, :32, :, :64]  # Read a sub-volume
 ```
 
 ## Features
