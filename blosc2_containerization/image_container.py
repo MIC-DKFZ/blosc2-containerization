@@ -7,7 +7,7 @@ import blosc2
 from bloscio import Blosc2IO
 import json
 import os
-from check_image_container import check_image_container, Status
+from container_checker import check_image_container, Status
 
 
 @dataclass
