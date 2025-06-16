@@ -2,16 +2,22 @@ from pathlib import Path
 from tqdm import tqdm
 import argparse
 import subprocess
+import numpy as np
+from image_container import ContainerWriter
+import random
+from typing import List
 
 
 def store_dataset(json_filepath, save_dir, num_threads, patch_size, num_jobs, is_medium, is_long, is_verylong):
+    sub_container_indices = get_container_indices(save_dir, patch_size)
+    sub_container_indices = split_list(sub_container_indices, num_jobs)
     for job_index in tqdm(range(num_jobs)):
-        command = create_command(json_filepath, save_dir, num_threads, patch_size, num_jobs, job_index)
+        command = create_command(json_filepath, save_dir, num_threads, patch_size, sub_container_indices[job_index])
         lsf_command = create_lsf_command(command, processes=num_threads, is_medium=is_medium, is_long=is_long, is_verylong=is_verylong)
         submit_lsf_job(lsf_command)
 
 
-def create_command(json_filepath: Path, save_dir: Path, num_threads: int, patch_size, num_jobs: int, job_index: int) -> list[str]:
+def create_command(json_filepath: Path, save_dir: Path, num_threads: int, patch_size, sub_container_indices: List[int]) -> list[str]:
     """
     Create the command for converting an image.
 
@@ -37,10 +43,8 @@ def create_command(json_filepath: Path, save_dir: Path, num_threads: int, patch_
                 f"{num_threads}",
                 "-p",
                 f"{patch_size[0]} {patch_size[1]} {patch_size[2]} {patch_size[3]}",
-                "--num_jobs",
-                f"{num_jobs}",
-                "--job_index",
-                f"{job_index}",
+                "--indices",
+                f"{' '.join(map(str, sub_container_indices))}",
             ]
     command = " ".join(command)
     return command
@@ -51,10 +55,10 @@ def create_lsf_command(command, queue: str = "short-debian", processes: int = 1,
         mem = 20
         queue = "medium-debian"
     if is_long:
-        mem = 199
+        mem = 20
         queue = "long-debian"
     if is_verylong:
-        mem = 199
+        mem = 50
         queue = "verylong-debian"
     lsf_command = f'bsub -q "{queue}" -n {processes} -R "rusage[mem={mem}GB]" /bin/bash -l -c ". ~/start_nnunetv2.sh; {command}"'
     return lsf_command
@@ -79,6 +83,22 @@ def submit_lsf_job(command: str, shell: bool = True) -> subprocess.Popen:
         stderr=subprocess.PIPE
     )
     return process
+
+
+def get_container_indices(save_dir, patch_size, shuffled=True):
+    container_writer = ContainerWriter(save_dir, patch_size, np.float32)
+    container_writer.load_storage()
+    sub_containers = container_writer.get_sub_containers()
+    sub_container_indices = list(range(len(sub_containers)))
+    if shuffled:
+        random.shuffle(sub_container_indices)
+    return sub_container_indices
+
+
+def split_list(lst, n):
+    k, m = divmod(len(lst), n)
+    return [lst[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n)]
+
 
 
 if __name__ == "__main__":
