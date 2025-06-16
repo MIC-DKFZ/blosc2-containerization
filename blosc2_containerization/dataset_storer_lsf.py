@@ -28,7 +28,7 @@ def create_command(json_filepath: Path, save_dir: Path, num_threads: int, patch_
     """
     command = [
                 "python", 
-                "mic_rocket/wp4/mic_rocket_dataset_storage.py",
+                "blosc2_containerization/dataset_storer.py",
                 "-i",
                 f"{json_filepath}",
                 "-o",

@@ -31,7 +31,7 @@ def get_leaf_parts_of_b2nd_files(directory):
     """
     leaf_parts = []
 
-    for root, _, files in tqdm(os.walk(directory), miniters=20000, disable=True):
+    for root, _, files in tqdm(os.walk(directory), miniters=20000, disable=False):
         for file in files:
             if file.endswith(".b2nd"):
                 leaf_parts.append(os.path.join(root, file))
@@ -47,14 +47,14 @@ def validate_filepaths(load_dir, save_dir, processes):
         
     print("Validating images...", flush=True)
     valid_ids = {}
-    image_validity = tqdmp(validate_image, image_filepaths, processes)
+    image_validity = tqdmp(validate_image, image_filepaths, processes, disable=False)
     print("Validated images.", flush=True)
 
     print("Formatting image paths...", flush=True)
     for path, valid in tqdm(zip(image_filepaths, image_validity)):
         if valid:
             image_id = Path(path).stem
-            rel_path = path.replace(load_dir, "")[:-5]
+            rel_path = path.replace(str(load_dir) + "/", "")[:-5]
             valid_ids[image_id] = rel_path
     print("Formatted image paths", flush=True)
 
