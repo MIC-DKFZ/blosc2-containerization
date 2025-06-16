@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
+from tqdmp import tqdmp
 import json
 from bloscio import Blosc2IO
 import gc
@@ -14,7 +15,7 @@ def register_dataset(json_filepath, save_dir, num_images, num_threads, patch_siz
     load_dir = json_filepath.parent
     save_dir = Path(save_dir)
 
-    shutil.rmtree(save_dir, ignore_errors=True)
+    # shutil.rmtree(save_dir, ignore_errors=True)
 
     container_writer = ContainerWriter(save_dir, patch_size, np.float32)
 
@@ -27,19 +28,29 @@ def register_dataset(json_filepath, save_dir, num_images, num_threads, patch_siz
     images = {image_id: images[image_id] for image_id in image_ids}
 
     print("Registering images...")
-    for image_id, filepath in tqdm(images.items(), desc="Register images"):
-        load_filepath = load_dir / (filepath + ".b2nd")
-        try:
-            image = Blosc2IO.load(load_filepath, num_threads=num_threads)[0]
-            container_writer.register_image(image_id, image.shape)
-        except Exception as e:
-            print(f"Could not open image {image_id}.")
+    image_shapes = tqdmp(get_image_shape, list(images.values()), num_threads, load_dir=load_dir)
+
+    for image_id, image_shape in tqdm(zip(list(images.keys()), image_shapes)):
+        if image_shape is not None:
+            container_writer.register_image(image_id, image_shape)
+
     gc.collect()
 
     print("Creating containers...")
     container_writer.create_containers()
     container_writer.save_storage()
     print("Finished.")
+
+def get_image_shape(filepath, load_dir):
+    load_filepath = load_dir / (filepath + ".b2nd")
+    try:
+        image_shape = Blosc2IO.load(load_filepath)[0].shape
+    except Exception as e:
+        print(f"Could not open image {image_id}.")
+        print(e)
+        image_shape = None
+    return image_shape
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
