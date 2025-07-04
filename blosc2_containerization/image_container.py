@@ -641,12 +641,14 @@ class ContainerReader:
         self.storage_dir = Path(storage_dir)
         with open(self.storage_dir / "storage_metadata.json", "r", encoding="utf-8") as f: 
             storage = json.load(f)
-        self.containers = {
-            str(super_container_id): {
-                str(sub_container_id): SubContainer(**sub_container) 
-                for sub_container_id, sub_container in super_container.items()
-            } for super_container_id, super_container in storage["containers"].items()
-        }
+        self.containers = {}
+        for super_container_id, super_container in storage["containers"].items():
+            self.containers[str(super_container_id)] = {}
+            for sub_container_id, sub_container in super_container.items():
+                sub_container["storage_dir"] = str(storage_dir)
+                sub_container["path"] = f"{str(storage_dir)}/{sub_container['id']}.b2nd"
+                self.containers[str(super_container_id)][str(sub_container_id)] = SubContainer(**sub_container)
+
         self.images = {
             image["id"]: Image(**image) for image in storage["images"].values()
         }
