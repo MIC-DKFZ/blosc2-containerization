@@ -33,7 +33,7 @@ pip install -e .
 
 ```python
 import numpy as np
-from container_writer import ContainerWriter
+from blosc2_containerization import ContainerWriter
 
 # Set up storage directory and patch size
 storage_dir = "/path/to/image_store"
@@ -71,7 +71,7 @@ container_writer.save_storage()
 
 ```python
 import numpy as np
-from container_reader import ContainerReader
+from blosc2_containerization import ContainerReader
 
 # Initialize the reader
 container_reader = ContainerReader("/path/to/image_store")

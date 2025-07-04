@@ -3,7 +3,7 @@ from tqdm import tqdm
 from tqdmp import tqdmp
 import json
 from pathlib import Path
-from bloscio import Blosc2IO
+from blosc2_containerization.bloscio import Blosc2IO
 import argparse
 
 

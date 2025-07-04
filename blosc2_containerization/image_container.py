@@ -4,10 +4,10 @@ from dataclasses import dataclass, asdict
 import numpy as np
 from collections import defaultdict
 import blosc2
-from bloscio import Blosc2IO
+from blosc2_containerization.bloscio import Blosc2IO
 import json
 import os
-from container_checker import check_image_container, Status
+from blosc2_containerization.container_checker import check_image_container, Status
 
 
 @dataclass

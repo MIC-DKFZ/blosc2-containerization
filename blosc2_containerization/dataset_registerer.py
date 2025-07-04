@@ -1,11 +1,11 @@
-from image_container import ContainerWriter
+from blosc2_containerization.image_container import ContainerWriter
 import shutil
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
 from tqdmp import tqdmp
 import json
-from bloscio import Blosc2IO
+from blosc2_containerization.bloscio import Blosc2IO
 import gc
 import argparse
 

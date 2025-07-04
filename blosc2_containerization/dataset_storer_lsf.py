@@ -3,7 +3,7 @@ from tqdm import tqdm
 import argparse
 import subprocess
 import numpy as np
-from image_container import ContainerWriter
+from blosc2_containerization.image_container import ContainerWriter
 import random
 from typing import List
 
