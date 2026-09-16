@@ -1,8 +1,8 @@
 """Smoke tests for the package's __main__ entry points, run in-process via runpy.
 
 These exercise the CLI dispatchers and usage demos that are never imported by
-the library API. The tqdmp-gated parallel dataset paths are deliberately not
-triggered.
+the library API. The parallel dataset CLI paths are not triggered here (they
+require a real .b2nd dataset tree); import + dispatch coverage only.
 """
 import json
 import os

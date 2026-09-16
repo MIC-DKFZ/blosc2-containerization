@@ -1,8 +1,9 @@
 """dataset_* helper functions.
 
-The parallel call paths (register_dataset, validate_filepaths) import tqdmp
-lazily and tqdmp is not installed in this env, so only import-level coverage
-and the non-parallel helpers are tested (PROJECT.md addendum #8).
+tqdm and tqdmp are declared dependencies and are installed in this env, so
+the dataset modules import them at module level. The parallel call paths
+(register_dataset, validate_filepaths) are covered at import level; the
+non-parallel helpers are tested directly here.
 """
 import json
 
