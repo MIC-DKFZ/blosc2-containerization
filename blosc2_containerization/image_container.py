@@ -288,10 +288,18 @@ class ContainerRegion:
 
         bounded_key = tuple(self._bound_index(k, off, lim) for k, off, lim in zip(key, self.offset, self.limits))
 
-        assert all([value.shape[i] <= self.shape[i] for i in range(len(self.shape))])
-        assert value.dtype == self.array.dtype
-        assert value.flags['C_CONTIGUOUS']
-        assert all([s >= 0 for s in value.strides])
+        for i in range(len(self.shape)):
+            if value.shape[i] > self.shape[i]:
+                raise ValueError(
+                    f"Value shape {value.shape} does not fit region shape {self.shape} "
+                    f"(axis {i}: {value.shape[i]} > {self.shape[i]})."
+                )
+        if value.dtype != self.array.dtype:
+            raise ValueError(f"Value dtype {value.dtype} does not match container dtype {self.array.dtype}.")
+        if not value.flags["C_CONTIGUOUS"]:
+            raise ValueError("Value must be a C-contiguous array.")
+        if any(s < 0 for s in value.strides):
+            raise ValueError("Value must have non-negative strides.")
 
         self.array[bounded_key] = value
 
