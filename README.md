@@ -1,31 +1,35 @@
 # Blosc2 Containerization
 
-[![License Apache Software License 2.0](https://img.shields.io/pypi/l/blosc2_containerization.svg?color=green)](https://github.com/Karol-G/blosc2_containerization/raw/main/LICENSE)
-[![PyPI](https://img.shields.io/pypi/v/blosc2_containerization.svg?color=green)](https://pypi.org/project/blosc2_containerization)
-[![Python Version](https://img.shields.io/pypi/pyversions/blosc2_containerization.svg?color=green)](https://python.org)
-
 Efficient management and storage of large-scale 3D medical imaging data using Blosc2 multi-image containers in Python.
 
 ## Introduction
 
-Medical imaging research and clinical workflows often require handling thousands of volumetric images, resulting in millions of individual files and significant filesystem overhead. The **Blosc2 Containerization** project provides a scalable, fast, and storage-efficient solution by grouping multiple images with shared spatial dimensions into compressed Blosc2 containers. This reduces filesystem clutter, accelerates I/O, and is especially beneficial on high-performance compute clusters or when working with very large datasets.
+Medical imaging research and clinical workflows often require handling thousands of volumetric images, resulting in millions of individual files and significant filesystem overhead. The **Blosc2 Containerization** project provides a scalable, fast, and storage-efficient solution by grouping multiple images with shared dimensions into compressed Blosc2 containers. This reduces filesystem clutter, accelerates I/O, and is especially beneficial on high-performance compute clusters or when working with very large datasets.
 
-This library introduces two core classes:
+The package provides:
 
-* **ContainerWriter**: For registering, packing, and writing image arrays into shared containers.
-* **ContainerReader**: For retrieving entire images or arbitrary patches using image IDs and bounding boxes.
-
-The approach automatically groups images by shared (H, W) dimensions, so you can efficiently access or store full images or subregions on demand.
+* **ContainerWriter**: registers, packs, and writes image arrays into shared containers.
+* **ContainerReader**: retrieves entire images or arbitrary patches using image IDs and bounding boxes.
+* **Blosc2IO** (`blosc2_containerization.bloscio`): low-level save/load of Blosc2 NDArrays with recommended chunk/block sizing.
+* **container_checker** (`blosc2_containerization.container_checker`): verifies container status (`FINISHED` / `UNFINISHED` / `NOT_EXISTING` / `PYTHON_ERROR` / `SEG_FAULT`) for resume support.
+* **Dataset CLI tools** (`dataset_indexer`, `dataset_registerer`, `dataset_storer`): index, register, and store a directory of preprocessed `.b2nd` images. A cluster-specific LSF driver is provided in `scripts/dataset_storer_lsf.py` (not part of the installable package).
 
 ## Installation
 
-You can install `blosc2_containerization` via:
+```bash
+pip install blosc2_containerization
+```
+
+Until the package is published, install from a source checkout:
 
 ```bash
-git clone git@git.dkfz.de:mic/internal/mic-rocket/blosc2-containerization.git blosc2_containerization
-cd blosc2_containerization
-pip install -e .
+pip install /path/to/blosc2_containerization
 ```
+
+Requirements:
+
+* Python 3.9 – 3.12
+* Dependencies: `numpy`, `blosc2>=3.0.0`, `tqdm`, `tqdmp` (the latter two are only exercised by the dataset CLI tools; `tqdmp` provides the parallel progress bar).
 
 ## Usage Examples
 
@@ -89,6 +93,28 @@ bbox = ((0, 1), (0, 64), (0, 128), (0, 128))
 patch = container_reader.load_patch(image_id, bbox)
 print("Patch shape:", patch.shape)
 ```
+
+### Grouping semantics
+
+* Images are grouped into **super-containers by (C, H, W)** — channel count, height, width — and stacked along the depth (D) axis inside each super-container.
+* Images sharing (C, H, W) are packed into the same sub-container up to `container_size` (default 100) images per sub-container, which reduces the number of on-disk files.
+* The channel count must be uniform within a group: registering a mismatched channel count places the image in its own super-container (it can never share one with a differently-channeled image), and the write path validates shape/dtype/contiguity and raises a descriptive `ValueError` rather than truncating data.
+* The default container dtype is `float32` (`ContainerWriter(dtype=...)` to change it); stored arrays must match it.
+
+### Resume and container status
+
+* Each container records an `is_container_stored` flag. `ContainerWriter.load_storage()` + `create_containers()`/`store_image()` can be re-run over a partially stored dataset: finished sub-containers are detected and skipped, unfinished ones are reopened.
+* `check_image_container(path)` from `blosc2_containerization.container_checker` returns one of `Status.FINISHED`, `Status.UNFINISHED`, `Status.NOT_EXISTING`, `Status.PYTHON_ERROR`, or `Status.SEG_FAULT`.
+
+### Dataset CLI tools
+
+The package ships three dataset-level entry points (run as modules or scripts, each with `-i/--input` and `-o/--output`):
+
+* `dataset_indexer` — indexes all `.b2nd` files under an input directory and validates them.
+* `dataset_registerer` — registers the indexed images into a `ContainerWriter` and creates the containers.
+* `dataset_storer` — stores image arrays into the registered containers (resumable).
+
+A cluster-specific LSF job-submission driver is provided in `scripts/dataset_storer_lsf.py` outside the package; it is not installed and is intended for internal LSF clusters only.
 
 ## Features
 
