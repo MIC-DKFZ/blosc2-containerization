@@ -3,10 +3,53 @@ requires = ["setuptools>=42.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 
+[project]
+name = "blosc2_containerization"
+version = "0.1.0"
+description = "A library for Blosc2 image containerization."
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [
+    { name = "Karol Gotkowski", email = "karol.gotkowski@dkfz.de" },
+]
+license = { file = "LICENSE" }
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Image Processing",
+]
+dependencies = [
+    "numpy",
+    "blosc2>=3.0.0",
+    "tqdm",
+    "tqdmp",
+]
+
+[project.optional-dependencies]
+testing = [
+    "tox",
+    "pytest",
+    "pytest-cov",
+]
+
+[tool.setuptools]
+packages = ["blosc2_containerization"]
+
+[tool.setuptools.package-data]
+blosc2_containerization = ["*.yaml"]
+
 
 [tool.black]
 line-length = 79
-target-version = ['py38', 'py39', 'py310']
+target-version = ['py39', 'py310', 'py311', 'py312']
 
 
 [tool.ruff]
@@ -52,5 +95,5 @@ exclude = [
     "*_vendor*",
 ]
 
-target-version = "py38"
+target-version = "py39"
 fix = true
