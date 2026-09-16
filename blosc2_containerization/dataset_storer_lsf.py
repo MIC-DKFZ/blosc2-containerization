@@ -50,16 +50,18 @@ def create_command(json_filepath: Path, save_dir: Path, num_threads: int, patch_
     return command
 
 
-def create_lsf_command(command, queue: str = "short-debian", processes: int = 1, mem: int = 20, is_medium: bool = False, is_long: bool = False, is_verylong: bool = False):
+def create_lsf_command(command, queue: str = "short", processes: int = 1, mem: int = 20, is_medium: bool = False, is_long: bool = False, is_verylong: bool = False):
+    if processes == 0:
+        processes = 1
     if is_medium:
         mem = 20
-        queue = "medium-debian"
+        queue = "medium"
     if is_long:
         mem = 20
-        queue = "long-debian"
+        queue = "long"
     if is_verylong:
-        mem = 50
-        queue = "verylong-debian"
+        mem = 20
+        queue = "verylong"
     lsf_command = f'bsub -q "{queue}" -n {processes} -R "rusage[mem={mem}GB]" /bin/bash -l -c ". ~/start_nnunetv2.sh; {command}"'
     return lsf_command
 

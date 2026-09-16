@@ -46,7 +46,7 @@ def get_image_shape(filepath, load_dir):
     try:
         image_shape = Blosc2IO.load(load_filepath)[0].shape
     except Exception as e:
-        print(f"Could not open image {image_id}.")
+        print(f"Could not open image {load_filepath}.")
         print(e)
         image_shape = None
     return image_shape

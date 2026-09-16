@@ -4,22 +4,22 @@ import numpy as np
 from tqdm import tqdm
 import json
 from blosc2_containerization.bloscio import Blosc2IO
-# import threading
-# import queue
 import argparse
 
 
-def store_dataset(json_filepath, save_dir, num_threads, patch_size, num_loader_threads=1, indices=None):
+def store_dataset(json_filepath, save_dir, num_threads, patch_size, indices=None):
     json_filepath = Path(json_filepath)
     load_dir = json_filepath.parent
     save_dir = Path(save_dir)
 
-    container_writer = ContainerWriter(save_dir, patch_size, np.float32, 1)
+    print("Initializing container writer...")
+    container_writer = ContainerWriter(save_dir, patch_size, np.float32, num_threads)
     container_writer.load_storage()
 
     with open(json_filepath, 'r') as openfile:
         images = json.load(openfile)
 
+    print("Retrieving sub-containers...")
     sub_containers = container_writer.get_sub_containers()
     num_sub_containers = len(sub_containers)
 
@@ -50,20 +50,6 @@ def store_dataset(json_filepath, save_dir, num_threads, patch_size, num_loader_t
     images = {image_id: images[image_id] for image_id in image_ids}
 
     print("Storing images in sub-containers...")
-    # load_queue = queue.Queue(maxsize=8)
-
-    # loader_threads = []
-    # for i in range(num_loader_threads):
-    #     t = threading.Thread(target=image_loader, args=(i, image_ids, images, load_dir, load_queue, num_threads, num_loader_threads))
-    #     t.start()
-    #     loader_threads.append(t)
-
-    # saver_thread = threading.Thread(target=image_saver, args=(container_writer, load_queue, num_loader_threads, len(image_ids)))
-    # saver_thread.start()
-
-    # for t in loader_threads:
-    #     t.join()
-    # saver_thread.join()
 
     for image_id, image_path in tqdm(images.items()):
         store_image(image_id, image_path, load_dir, container_writer)
@@ -72,33 +58,11 @@ def store_dataset(json_filepath, save_dir, num_threads, patch_size, num_loader_t
 
 
 def store_image(image_id, image_path, load_dir, container_writer):
+    root_path = "/omics/groups/OE0441/e230-thrp-data/mic_rocket/nnssl_preprocessed/Dataset805_Rocket_v4"
+    root_path = Path(root_path)
     load_filepath = load_dir / (image_path + ".b2nd")
     array = Blosc2IO.load(load_filepath, num_threads=1)[0][...]
     container_writer.store_image(image_id, array)
-
-
-# def image_loader(worker_id, image_ids, images, load_dir, load_queue, num_threads, num_loader_threads):
-#     for i in range(worker_id, len(image_ids), num_loader_threads):
-#         image_id = image_ids[i]
-#         load_filepath = load_dir / (images[image_id] + ".b2nd")
-#         array = Blosc2IO.load(load_filepath, num_threads=num_threads)[0][...]
-#         load_queue.put((image_id, array))
-#     load_queue.put(None)  # Each loader adds a sentinel
-
-# def image_saver(container_writer, load_queue, num_loader_threads, total):
-#     pbar = tqdm(total=total, desc="Store images")
-#     finished_loaders = 0
-#     while True:
-#         item = load_queue.get()
-#         if item is None:
-#             finished_loaders += 1
-#             if finished_loaders == num_loader_threads:
-#                 break
-#             continue
-#         image_id, array = item
-#         container_writer.store_image(image_id, array)
-#         pbar.update(1)
-#     pbar.close()
 
 
 def split_list(lst, n):

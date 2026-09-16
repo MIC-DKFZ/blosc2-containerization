@@ -282,6 +282,12 @@ class ContainerRegion:
         key = key + (slice(None),) * (self.ndim - len(key))
 
         bounded_key = tuple(self._bound_index(k, off, lim) for k, off, lim in zip(key, self.offset, self.limits))
+
+        assert all([value.shape[i] <= self.shape[i] for i in range(len(self.shape))])
+        assert value.dtype == self.array.dtype
+        assert value.flags['C_CONTIGUOUS']
+        assert all([s >= 0 for s in value.strides])
+
         self.array[bounded_key] = value
 
     def _bound_index(self, idx, offset, limit):
@@ -543,6 +549,7 @@ class ContainerWriter:
                 for sub_container_id, sub_container in super_container.items()
             } for super_container_id, super_container in storage["containers"].items()
         }
+        self.containers = self._to_defaultdict(self.containers)
         self.images = {
             image["id"]: Image(**image) for image in storage["images"].values()
         }
@@ -600,6 +607,11 @@ class ContainerWriter:
             sub_container = self.containers[str(super_container_id)][str(sub_container_index)]
 
         return sub_container
+    
+    def _to_defaultdict(self, d):
+        if not isinstance(d, dict):
+            return d
+        return defaultdict(dict, {k: self._to_defaultdict(v) for k, v in d.items()})
     
 
 class ContainerReader:
