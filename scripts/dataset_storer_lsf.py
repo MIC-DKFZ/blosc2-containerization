@@ -17,7 +17,7 @@ def store_dataset(json_filepath, save_dir, num_threads, patch_size, num_jobs, is
         submit_lsf_job(lsf_command)
 
 
-def create_command(json_filepath: Path, save_dir: Path, num_threads: int, patch_size, sub_container_indices: List[int]) -> list[str]:
+def create_command(json_filepath: Path, save_dir: Path, num_threads: int, patch_size, sub_container_indices: List[int]) -> str:
     """
     Create the command for converting an image.
 
@@ -30,7 +30,7 @@ def create_command(json_filepath: Path, save_dir: Path, num_threads: int, patch_
         overwrite (bool): Whether to overwrite existing images in the output directory.
 
     Returns:
-        list[str]: The command as a list of strings to be executed for image conversion.
+        str: The command as a string to be executed for job submission.
     """
     command = [
                 "python", 
@@ -54,19 +54,16 @@ def create_lsf_command(command, queue: str = "short", processes: int = 1, mem: i
     if processes == 0:
         processes = 1
     if is_medium:
-        mem = 20
         queue = "medium"
     if is_long:
-        mem = 20
         queue = "long"
     if is_verylong:
-        mem = 20
         queue = "verylong"
     lsf_command = f'bsub -q "{queue}" -n {processes} -R "rusage[mem={mem}GB]" /bin/bash -l -c ". ~/start_nnunetv2.sh; {command}"'
     return lsf_command
 
 
-def submit_lsf_job(command: str, shell: bool = True) -> subprocess.Popen:
+def submit_lsf_job(command: str, shell: bool = True) -> subprocess.CompletedProcess:
     """
     Submit a job to the LSF cluster using the specified command.
 
@@ -75,15 +72,25 @@ def submit_lsf_job(command: str, shell: bool = True) -> subprocess.Popen:
         shell (bool): Whether to execute the command through the shell.
 
     Returns:
-        subprocess.Popen: The process object representing the submitted job.
+        subprocess.CompletedProcess: The completed submission process.
+
+    Raises:
+        RuntimeError: If bsub fails to submit the job (non-zero return code).
     """
-    # Submit the job and capture the output
-    process = subprocess.Popen(
-        command, 
+    process = subprocess.run(
+        command,
         shell=shell,
-        stdout=subprocess.PIPE, 
-        stderr=subprocess.PIPE
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
     )
+    if process.returncode != 0:
+        raise RuntimeError(
+            f"bsub submission failed (returncode {process.returncode}):\n"
+            f"stdout: {process.stdout}\nstderr: {process.stderr}"
+        )
+    if process.stdout.strip():
+        print(f"LSF submission: {process.stdout.strip()}")
     return process
 
 
@@ -109,7 +116,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', "--output", required=True, type=str, help="Absolute output path to the directory used for saving the containerized dataset.")
     parser.add_argument('-t', "--threads", required=False, type=int, default=1, help="Number of threads.")
     parser.add_argument('-p', '--patch_size', default=(1, 160, 160, 160), required=False, type=int, nargs=4, help="The image patch size.")
-    parser.add_argument("--num_jobs", required=False, type=int, default=None, help="Number of jobs for parallelization across jobs.")
+    parser.add_argument("--num_jobs", required=False, type=int, default=1, help="Number of jobs for parallelization across jobs.")
     parser.add_argument('--medium', required=False, default=False, action="store_true", help="Whether the medium queue is required.")
     parser.add_argument('--long', required=False, default=False, action="store_true", help="Whether the long queue is required.")
     parser.add_argument('--verylong', required=False, default=False, action="store_true", help="Whether the long queue is required.")
