@@ -468,6 +468,12 @@ class ContainerWriter:
         Raises:
             RuntimeError: If containers already created, image ID is duplicate, or shape is invalid.
         """
+        for super_container in self.containers.values():
+            for sub_container in super_container.values():
+                if sub_container.path is not None:
+                    raise RuntimeError(
+                        f"Cannot register image '{image_id}': containers have already been created."
+                    )
         if image_id in self.images:
             raise RuntimeError("Duplicate image id found in images.")
         if len(shape) != 4:
