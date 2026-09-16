@@ -3,7 +3,6 @@ import shutil
 from pathlib import Path
 import numpy as np
 from tqdm import tqdm
-from tqdmp import tqdmp
 import json
 from blosc2_containerization.bloscio import Blosc2IO
 import gc
@@ -26,6 +25,9 @@ def register_dataset(json_filepath, save_dir, num_images, num_threads, patch_siz
     if num_images is not None:
         image_ids = image_ids[:num_images]
     images = {image_id: images[image_id] for image_id in image_ids}
+
+    # lazy import: tqdmp is only needed for parallel registration
+    from tqdmp import tqdmp
 
     print("Registering images...")
     image_shapes = tqdmp(get_image_shape, list(images.values()), num_threads, load_dir=load_dir)

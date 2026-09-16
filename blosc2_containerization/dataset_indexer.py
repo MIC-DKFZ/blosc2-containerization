@@ -1,6 +1,5 @@
 import os
 from tqdm import tqdm
-from tqdmp import tqdmp
 import json
 from pathlib import Path
 from blosc2_containerization.bloscio import Blosc2IO
@@ -40,6 +39,9 @@ def get_leaf_parts_of_b2nd_files(directory):
 
 
 def validate_filepaths(load_dir, save_dir, processes):
+    # lazy import: tqdmp is only needed for parallel validation
+    from tqdmp import tqdmp
+
     print("Loading image_filepaths.json...", flush=True)
     with open(save_dir / "image_filepaths.json", "r", encoding="utf-8") as f: 
         image_filepaths = json.load(f)
