@@ -16,21 +16,20 @@ class Status(Enum):
 
 def check_image_container(path):
     if (path is None) or (not Path(path).is_file()):
-        status = Status.NOT_EXISTING
-    else:
-        result = subprocess.run([sys.executable, __file__, "-i", f"{path}", "--process"],
-                                capture_output=True, text=True)
+        return Status.NOT_EXISTING
 
-        if result.returncode == -11:
-            status = Status.SEG_FAULT
+    result = subprocess.run([sys.executable, __file__, "-i", f"{path}", "--process"],
+                            capture_output=True, text=True)
 
-        try:
-            enum_name = result.stdout.strip()
-            status = Status[enum_name]
-        except Exception:
-            status = Status.PYTHON_ERROR
+    # A segfaulted child never writes a status name, so detect it from the return
+    # code before falling back to parsing stdout.
+    if result.returncode == -11:
+        return Status.SEG_FAULT
 
-    return status
+    try:
+        return Status[result.stdout.strip()]
+    except Exception:
+        return Status.PYTHON_ERROR
 
 
 def check_image_container_process(path, num_threads=1):
@@ -44,7 +43,7 @@ def check_image_container_process(path, num_threads=1):
         else:
             status = Status.UNFINISHED
     except Exception as e:
-        print(e)
+        print(e, file=sys.stderr)
         status = Status.PYTHON_ERROR
 
     print(status.name)  # Send enum name to parent process
