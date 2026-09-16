@@ -18,7 +18,7 @@ class Image:
     Attributes:
         id (str): Unique identifier for the image.
         shape (Tuple[int, int, int, int]): Shape of the image in (C, D, H, W) format.
-        super_container_id (Optional[str]): ID of the super container grouping images with the same (H, W) dimensions.
+        super_container_id (Optional[str]): ID of the super container grouping images with the same (C, H, W) dimensions.
         sub_container_id (Optional[str]): ID of the sub container where this image is stored.
         sub_container_index (Optional[int]): Index of the sub container in the super container.
         bbox (Optional[Tuple[int, int]]): Bounding box in the Blosc2 array indicating where the image is stored.
@@ -74,7 +74,7 @@ class SubContainer:
         Args:
             id (str): Unique identifier for the sub-container.
             sub_index (int): Index of the sub-container within the super-container.
-            super_id (str): ID of the super-container grouping containers with the same H and W.
+            super_id (str): ID of the super-container grouping containers with the same C, H and W.
             storage_dir (Union[str, Path]): Path to the directory for storing this container.
             shape (Optional[Tuple[int, int, int, int]]): Shape (C, D, H, W) of the container.
             image_ids (List[str], optional): List of image IDs initially assigned to this container.
@@ -163,6 +163,11 @@ class SubContainer:
         if self.shape is None:
             self.shape = image.shape
         else:
+            if image.shape[0] != self.shape[0]:
+                raise ValueError(
+                    f"Cannot append image '{image.id}': channel count "
+                    f"{image.shape[0]} does not match container channel count {self.shape[0]}."
+                )
             self.shape = (self.shape[0], self.shape[1] + image.shape[1], self.shape[2], self.shape[3])
         
         image.super_container_id = self.super_id
@@ -367,12 +372,13 @@ class ContainerRegion:
 
 class ContainerWriter:
     """
-    Manages efficient storage of multiple 3D medical images using Blosc2 containers, 
-    grouping images with shared spatial dimensions.
+    Manages efficient storage of multiple 3D medical images using Blosc2 containers,
+    grouping images with shared channel count and spatial dimensions.
 
     This class enables efficient disk storage of multiple 3D medical images by grouping them into shared
-    Blosc2 containers based on their spatial dimensions. Specifically, images with the same height (H)
-    and width (W) are packed into the same container along the depth (D) axis, allowing for flexible
+    Blosc2 containers based on their channel count and spatial dimensions. Specifically, images with the
+    same number of channels (C), height (H) and width (W) are packed into the same container along the
+    depth (D) axis, allowing for flexible
     depths while reducing the number of files and improving storage efficiency—especially important in
     large-scale compute environments with inode limitations.
 
@@ -380,7 +386,7 @@ class ContainerWriter:
     1. **Register images**: Each image must be registered with a unique identifier and its shape 
         `(C, D, H, W)`. The actual array data is not required at this stage.
     2. **Create containers**: Once all images are registered, containers are created based on their shared
-        (H, W) dimensions.
+        (C, H, W) dimensions.
     3. **Store image data**: After container creation, individual image arrays can be stored in the appropriate
         location within each container.
     4. **Save metadata**: All container and image mapping metadata is serialized for later loading and reuse.
@@ -445,7 +451,7 @@ class ContainerWriter:
 
     def register_image(self, image_id: str, shape: Tuple[int, int, int, int]):
         """
-        Registers an image for storage, grouping it by its (H, W) dimensions.
+        Registers an image for storage, grouping it by its (C, H, W) dimensions.
 
         Args:
             image_id (str): Unique string identifier for the image.
@@ -461,7 +467,7 @@ class ContainerWriter:
         
         image = Image(image_id, shape)
         self.images[image_id] = image
-        super_container_id = (image.shape[self.h_axis], image.shape[self.w_axis])
+        super_container_id = (image.shape[0], image.shape[self.h_axis], image.shape[self.w_axis])
         sub_container = self._get_sub_container(super_container_id)
         sub_container.append_image(image)
 
@@ -469,7 +475,7 @@ class ContainerWriter:
         """
         Creates Blosc2 containers on disk for all registered images.
 
-        Allocates optimal storage layout by (H, W) group and creates the necessary sub-containers.
+        Allocates optimal storage layout by (C, H, W) group and creates the necessary sub-containers.
         """
         for super_container in self.containers.values():
             for sub_container in super_container.values():
@@ -577,10 +583,10 @@ class ContainerWriter:
 
     def _get_sub_container(self, super_container_id):
         """
-        Retrieves or creates a sub-container for a given super-container (H, W) group.
+        Retrieves or creates a sub-container for a given super-container (C, H, W) group.
 
         Args:
-            super_container_id: Key representing the (H, W) group for the container.
+            super_container_id: Key representing the (C, H, W) group for the container.
 
         Returns:
             SubContainer: The assigned or newly created sub-container.
