@@ -25,6 +25,8 @@ class Blosc2IO:
         """
         blosc2.set_nthreads(num_threads)
         dparams = {'nthreads': num_threads}
+        if mode not in ('r', 'r+'):
+            raise ValueError(f"Blosc2IO.load: mode must be 'r' or 'r+', got {mode!r}.")
         data = blosc2.open(urlpath=filepath, dparams=dparams, mode=mode, mmap_mode=mode)
         metadata = dict(data.schunk.meta)
         del metadata["b2nd"]
@@ -133,9 +135,15 @@ class Blosc2IO:
         while estimated_nbytes_block > (l1_cache_size_per_core_in_bytes * safety_factor):
             # pick largest deviation from patch_size that is not 1
             axis_order = np.argsort(block_size[1:] / patch_size)[::-1]
+            if all(block_size[i + 1] == 1 for i in range(len(axis_order))):
+                raise RuntimeError(
+                    "comp_blosc2_params: block exceeds the L1 cache budget and no spatial "
+                    f"axis can be shrunk further (image_size={tuple(image_size)}, "
+                    f"patch_size={tuple(patch_size)}); the channel dimension alone is too large."
+                )
             idx = 0
             picked_axis = axis_order[idx]
-            while block_size[picked_axis + 1] == 1 or block_size[picked_axis + 1] == 1:
+            while block_size[picked_axis + 1] == 1:
                 idx += 1
                 picked_axis = axis_order[idx]
             # now reduce that axis to the next lowest power of 2
