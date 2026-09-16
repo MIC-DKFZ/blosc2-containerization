@@ -58,8 +58,6 @@ def store_dataset(json_filepath, save_dir, num_threads, patch_size, indices=None
 
 
 def store_image(image_id, image_path, load_dir, container_writer):
-    root_path = "/omics/groups/OE0441/e230-thrp-data/mic_rocket/nnssl_preprocessed/Dataset805_Rocket_v4"
-    root_path = Path(root_path)
     load_filepath = load_dir / (image_path + ".b2nd")
     array = Blosc2IO.load(load_filepath, num_threads=1)[0][...]
     container_writer.store_image(image_id, array)

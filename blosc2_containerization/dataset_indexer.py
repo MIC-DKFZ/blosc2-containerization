@@ -82,7 +82,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-i', "--input", required=True, type=str, help="Path to the input dir")
     parser.add_argument('-o', "--output", required=True, type=str, help="Path to the output dir")
-    parser.add_argument('-s', "--dataset_sub_dir", required=False, type=str, default="nnsslPlans_noresample", help="Name of dataset subdir. Default: 'nnsslPlans_noresample'")
+    parser.add_argument('-s', "--dataset_sub_dir", required=True, type=str, help="Name of the dataset subdir (relative to --input).")
     parser.add_argument('-p', "--processes", required=False, type=int, default=50, help="Number of processes.")
     args = parser.parse_args()
 

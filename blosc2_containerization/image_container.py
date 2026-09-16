@@ -758,12 +758,10 @@ if __name__ == "__main__":
     # Example usage of the ContainerWriter and ContainerReader classes
     import numpy as np
     import shutil
+    import tempfile
 
-    # Set up the storage directory
-    storage_dir = "/home/k539i/Documents/datasets/original/image_store"
-
-    # Clear previous test data
-    shutil.rmtree(storage_dir, ignore_errors=True)
+    # Use a throwaway storage directory for this demo
+    storage_dir = tempfile.mkdtemp(prefix="blosc2_containerization_demo_")
 
     # Define a list of example image metadata entries
     images = {}
@@ -815,3 +813,6 @@ if __name__ == "__main__":
     print("Equal (load_patch): ", np.array_equal(image_patch0, image_patch1)) # load_patch
     print("Equal (open_image): ", np.array_equal(image_patch0, image_patch2)) # open_image
     print("Equal: ", np.array_equal(image_patch1, image_patch2))
+
+    # Clean up the demo storage directory
+    shutil.rmtree(storage_dir, ignore_errors=True)
