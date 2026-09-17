@@ -125,7 +125,7 @@ A cluster-specific LSF job-submission driver is provided in `scripts/dataset_sto
 
 ## License
 
-Apache Software License 2.0
+MIT License
 
 ## Acknowledgments
 
