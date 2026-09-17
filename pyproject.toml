@@ -8,7 +8,7 @@ name = "blosc2_containerization"
 version = "0.1.0"
 description = "A library for Blosc2 image containerization."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [
     { name = "Karol Gotkowski", email = "karol.gotkowski@dkfz.de" },
 ]
@@ -20,7 +20,6 @@ classifiers = [
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -49,7 +48,7 @@ blosc2_containerization = ["*.yaml"]
 
 [tool.black]
 line-length = 79
-target-version = ['py39', 'py310', 'py311', 'py312']
+target-version = ['py310', 'py311', 'py312']
 
 
 [tool.ruff]
@@ -70,7 +69,7 @@ select = [
 ignore = [
     "E501", # line too long. let black handle this
     "UP006", "UP007", # type annotation. As using magicgui require runtime type annotation then we disable this.
-    "SIM117", # flake8-simplify - some of merged with statements are not looking great with black, reanble after drop python 3.9
+    "SIM117", # flake8-simplify - some of merged with statements are not looking great with black
 ]
 
 exclude = [
@@ -95,5 +94,5 @@ exclude = [
     "*_vendor*",
 ]
 
-target-version = "py39"
+target-version = "py310"
 fix = true

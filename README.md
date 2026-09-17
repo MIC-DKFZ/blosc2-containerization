@@ -28,7 +28,7 @@ pip install /path/to/blosc2_containerization
 
 Requirements:
 
-* Python 3.9 – 3.12
+* Python 3.10 – 3.12
 * Dependencies: `numpy`, `blosc2>=3.0.0`, `tqdm`, `tqdmp` (the latter two are only exercised by the dataset CLI tools; `tqdmp` provides the parallel progress bar).
 
 ## Usage Examples
