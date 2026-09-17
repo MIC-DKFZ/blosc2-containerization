@@ -1,6 +1,12 @@
 # Blosc2 Containerization
 
 Efficient management and storage of large-scale 3D medical imaging data using Blosc2 multi-image containers in Python.
+<p align="center">
+  <a href="https://pypi.org/project/blosc2_containerization/"><img src="https://img.shields.io/pypi/v/blosc2_containerization?logo=pypi&color=brightgreen&cacheSeconds=300&v" alt="PyPI" align="middle" /></a>
+  <a href="https://pypi.org/project/blosc2_containerization/"><img src="https://img.shields.io/pypi/pyversions/blosc2_containerization?logo=python&cacheSeconds=300&v" alt="Python Version" align="middle" /></a>
+  <a href="https://github.com/MIC-DKFZ/blosc2-containerization/actions"><img src="https://img.shields.io/github/actions/workflow/status/MIC-DKFZ/blosc2-containerization/test_and_deploy.yml?branch=main&logo=github" alt="Tests" align="middle" /></a>
+  <a href="https://github.com/MIC-DKFZ/blosc2-containerization/blob/main/LICENSE"><img src="https://img.shields.io/github/license/MIC-DKFZ/blosc2-containerization" alt="License" align="middle" /></a>
+</p>
 
 ## Introduction
 
@@ -20,7 +26,7 @@ The package provides:
 pip install blosc2_containerization
 ```
 
-Until the package is published, install from a source checkout:
+To install from a source checkout instead:
 
 ```bash
 pip install /path/to/blosc2_containerization
