@@ -30,7 +30,7 @@ def test_top_level_exports():
 
     assert hasattr(pkg, "ContainerWriter")
     assert hasattr(pkg, "ContainerReader")
-    assert pkg.__version__ == "0.1.0"
+    assert isinstance(pkg.__version__, str) and pkg.__version__
 
 def test_dataset_modules_expose_tqdmp_at_module_level():
     # tqdmp is a declared dependency imported at top level (not lazily)

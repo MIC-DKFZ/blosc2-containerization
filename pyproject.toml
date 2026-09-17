@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=42.0.0", "wheel"]
+requires = ["setuptools>=64", "wheel", "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 
 [project]
 name = "blosc2_containerization"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A library for Blosc2 image containerization."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -96,3 +96,6 @@ exclude = [
 
 target-version = "py310"
 fix = true
+
+[tool.setuptools_scm]
+version_file = "blosc2_containerization/_version.py"
