@@ -27,12 +27,6 @@ The package provides:
 pip install blosc2_containerization
 ```
 
-To install from a source checkout instead:
-
-```bash
-pip install /path/to/blosc2_containerization
-```
-
 Requirements:
 
 * Python 3.10 – 3.12
