@@ -54,14 +54,17 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   deploy:
-    # this will run when you have tagged a commit, starting with "v*"
-    # and requires that you have put your twine API key in your
-    # github secrets (see readme for details)
+    # runs on tags matching v*; publishes to PyPI via trusted publishing
+    # (GitHub OIDC — no token secret required)
     needs: [test]
     runs-on: ubuntu-latest
     if: contains(github.ref, 'tags')
+    permissions:
+      id-token: write
     steps:
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # setuptools_scm needs the tag in local history
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
@@ -69,12 +72,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -U setuptools setuptools_scm wheel twine build
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.TWINE_API_KEY }}
-        run: |
-          git tag
-          python -m build .
-          twine upload dist/*
+          pip install -U build
+      - name: Build
+        run: python -m build
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          trusted-publishing: true
